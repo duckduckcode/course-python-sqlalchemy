@@ -35,7 +35,7 @@ class Product(Base):
   stock = Column(Integer)
 
   def __repr__(self):
-    return "<Product(id='%d', name='%s')>" % (self.id, self.name)
+    return f"Product(id='{self.id}', name='{self.name}')"
 
 """
 FUNCTIONS
