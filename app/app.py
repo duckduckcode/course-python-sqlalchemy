@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 DATABASE
 """
 # connect the sqlalchemy database engine
-db_engine = create_engine('sqlite:///database.db', echo=False)
+db_engine = create_engine('sqlite:///database.db')
 
 # test the connection by getting the table names
 db_tables = db_engine.table_names()
@@ -15,6 +15,7 @@ print('tables:', db_tables)
 
 # create a configured "Session" class
 Session = sessionmaker(bind=db_engine)
+session = Session()
 
 """
 CLASSES
@@ -40,53 +41,89 @@ class Product(Base):
 FUNCTIONS
 """
 def list_all_products():
-  print('\nAll products:')
-  
-  session = Session()
+  print()
+  print('All products:')
+
   products = session.query(Product).all()
 
   for product in products:
     print(product)
 
-  input('\nPress Enter to return to menu...')
+  print()
+  input('Press Enter to return to menu...')
 
 
 def search_for_product():
-  search_term = input('\nPlease enter a search term: ')
+  print()
+  search_term = input('Please enter a search term: ')
+  
+  search_filter = Product.name.like('%'+search_term+'%')
+  products = session.query(Product).filter(search_filter).all()
 
-  session = Session()
-  products = session.query(Product).filter(Product.name.like('%'+search_term+'%')).all()
-
-  print('\nMatching products:')
+  print()
+  print('Matching products:')
 
   for product in products:
     print(product)
   
-  input('\nPress Enter to return to menu...')
+  print()
+  input('Press Enter to return to menu...')
 
 def add_new_product():
-  print('\nAdd a new product:')
+  print()
+  print('Add a new product:')
 
-  name = input('What is the product name? ')
-  desc = input('What is the description? ')
-  price = input('What is the price per unit? ')
-  stock = input('What is the current number in stock? ')
+  new_name = input('What is the product name? ')
+  new_description = input('What is the description? ')
+  new_price = input('What is the price per unit? ')
+  new_stock = input('What is the current number in stock? ')
   
   new_product = Product(
-    name = name,
-    description = desc,
-    price = price,
-    stock = stock
+    name = new_name,
+    description = new_description,
+    price = new_price,
+    stock = new_stock
   )
-  
-  session = Session()
+
   session.add(new_product)
   session.commit()
 
-  print('\nAdded new product:')
-  print(name + ': ' + description + ' $' + price + ' (' + stock + ')')
+  print()
+  print('Added new product:')
+  
+  message = f'{new_product.name} ${new_product.price}'
+  print(message)
 
-  input('\nPress Enter to return to menu...')
+  print()
+  input('Press Enter to return to menu...')
+
+
+def delete_product():
+  print()
+  print('Delete product:')
+
+  products = session.query(Product).all()
+
+  for product in products:
+    print(product)
+
+  user_input = input('Enter the ID of the product you want to delete: ')
+  product_id = int(user_input)
+
+  product = session.query(Product).filter_by(id = product_id).one()
+  session.delete(product)
+  session.commit()
+
+  print()
+  print('Deleted product:')
+
+  message = f'{product.name}'
+  print(message)
+
+  print()
+  input('Press Enter to return to menu...')
+
+
 
 
 """
@@ -96,13 +133,16 @@ MAIN MENU
 print('Hello! Welcome to the Cake Shop!')
 
 while True:
-  print('\nWhat would you like to do?')
+  print()
+  print('What would you like to do?')
   print('1. List all products')
   print('2. Search for a product')
   print('3. Add a new product')
-  print('4. Quit')
+  print('4. Delete product')
+  print('5. Quit')
+  print()
 
-  user_choice = input('\nPlease enter a number: ')
+  user_choice = input('Please enter a number: ')
 
   if user_choice == '1':
     list_all_products()
@@ -111,7 +151,11 @@ while True:
   elif user_choice == '3':
     add_new_product()
   elif user_choice == '4':
-    print('\nGoodbye!')
+    delete_product()
+  elif user_choice == '5':
+    print()
+    print('Goodbye!')
     sys.exit(0)
   else:
-    print('\nSorry that\'s not a valid number')
+    print()
+    print('Sorry that is not a valid number')
